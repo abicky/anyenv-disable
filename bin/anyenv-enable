@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# Summary: Enable a specific **env
+#
+# Usage: anyenv enable <**env>
+#
+# Run 'anyenv envs-disabled' for the list of disabled **envs.
+#
+set -e
+[ -n "$ANYENV_DEBUG" ] && set -x
+
+# Provide anyenv completions
+if [ "$1" = "--complete" ]; then
+  exec anyenv envs-disabled
+fi
+
+usage() {
+  anyenv-help enable 2>/dev/null
+  [ -z "$1" ] || exit "$1"
+}
+
+while (( $# > 0 )); do
+  case $1 in
+    -h|--help)
+      usage 0;;
+    -*)
+      echo "Unknown option: $1" >&2
+      usage 1;;
+    *)
+      [ -n "$env" ] && usage 1
+      env=$1;;
+  esac
+  shift
+done
+[ -n "$env" ] || usage 1
+
+src_env_dir="${ANYENV_ROOT}/envs-disabled/${env}"
+dst_env_dir="${ANYENV_ROOT}/envs/${env}"
+if [ ! -d "$src_env_dir" ]; then
+  if [ -d "$dst_env_dir" ]; then
+    # Already enabled
+    exit
+  else
+    echo "${env} is not installed" >&2
+    exit 1
+  fi
+elif [ -d "src_env_dir" ] && [ -e "$dst_env_dir" ]; then
+  echo "Failed to enable ${env} because ${dst_env_dir} exits" >&2
+  exit 1
+fi
+
+mv "$src_env_dir" "$dst_env_dir"
+echo "${env} has been enabled."
+echo "Please reload your profile (exec \$SHELL -l) or open a new session."
